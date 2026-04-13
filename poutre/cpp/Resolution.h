@@ -10,14 +10,14 @@ public:
 
 
        // Méthode directe
-    static void cholesky(Poutre& p) ;
-    // Métho
+    static void cholesky_P1(Poutre& p);
+    static void cholesky_P2(Poutre& p) ;
 
-     static void jacobi(Poutre& p, int max_iter, double tol);
+     static void jacobi_P1(Poutre& p, int max_iter, double tol);
+     static void jacobi_P2(Poutre& p, int max_iter, double tol);
 
-    static void gaussSeidel(Poutre& p, int max_iter, double tol) ;
-
-   
+    static void gaussSeidel_P1(Poutre& p, int max_iter, double tol) ;
+    static void gaussSeidel_P2(Poutre& p, int max_iter, double tol) ;
 };
 
 

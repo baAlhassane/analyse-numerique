@@ -7,6 +7,8 @@
 
 #include "TypeEF.h"
 
+#include <iomanip> // Indispensable pour setw et setprecision
+
 
 //cd ../../../home/alhassaneba/document/analyse_numerique/poutre/cpp/
 
@@ -19,19 +21,25 @@ int main() {
         auto f = [](double x) { return 1.0; };
         auto c = [](double x) { return 0.0; };
 
-        // =========================================================
-        // SECTION P1 : TRIDIAGONAL
-        // =========================================================
-        Poutre poutreP1(nb_noeuds, longueur, TypeEF::P1,  c, f);
-        
-        Methode::appliquerEF_P1(poutreP1);
-
-        // Si c'est 0, on force pour voir si le solveur réagit
    
-        // Condition aux limites : Bloqué à gauche (u[0] = 0)
-        poutreP1.d_centrale[0] = 1.0;
-        poutreP1.d_sup1[0] = 0.0; // Dans ton P1, d_sup devient d_sup1
-        poutreP1.b[0] = 0.0;
+   // =========================================================
+// SECTION P1 : TRIDIAGONAL - BI-ENCASTRÉ
+// =========================================================
+Poutre poutreP1(nb_noeuds, longueur, TypeEF::P1, c, f);
+Methode::appliquerEF_P1(poutreP1);
+
+// --- Blocage GAUCHE (Noeud 0) ---
+poutreP1.d_centrale[0] = 1.0;
+poutreP1.d_sup1[0] = 0.0;
+poutreP1.b[0] = 0.0;
+
+// --- Blocage DROIT (Noeud n-1) ---
+int lastP1_simple = poutreP1.n - 1;
+poutreP1.d_centrale[lastP1_simple] = 1.0;
+poutreP1.d_inf1[lastP1_simple - 1] = 0.0; // On coupe la liaison avec l'avant-dernier noeud
+poutreP1.b[lastP1_simple] = 0.0;
+
+Resolution::tridiagonal(poutreP1);
 
         Resolution::tridiagonal(poutreP1);
 
@@ -43,6 +51,8 @@ int main() {
         // 1. Assemblage de la matrice pentadiagonale
         Methode::appliquerEF_P2(poutreP2); 
         std::cout << "\n--- Matrice P2 assemblee (Pentadiagonale) ---" << std::endl;
+
+
 
         // 2. Conditions aux limites (Simple encastrement au noeud 0)
         // Pour P2, on doit annuler les DEUX sur-diagonales partant de la ligne 0
@@ -75,13 +85,81 @@ std::cout << "DEBUG: Force milieu = " << poutreP2.b[n/2] << std::endl;
         // 5. Comparaison des résultats
         // =========================================================
   // Pour l'affichage final, utilise le h de chaque poutre
+
+
+
+// =========================================================
+// SECTION CHOLESKY P1 : BI-ENCASTRÉE (0 et L)
+// =========================================================
+Poutre poutre_cholesky_P1(nb_noeuds, longueur, TypeEF::P1, c, f);
+Methode::appliquerEF_P1(poutre_cholesky_P1);
+
+// --- CONDITION LIMITE GAUCHE (Noeud 0) ---
+poutre_cholesky_P1.d_centrale[0] = 1.0;
+poutre_cholesky_P1.d_sup1[0]     = 0.0; 
+poutre_cholesky_P1.d_inf1[0]     = 0.0; // Symétrie pour Cholesky
+poutre_cholesky_P1.b[0]          = 0.0;
+
+// --- CONDITION LIMITE DROITE (Noeud n-1) ---
+int lastP1 = poutre_cholesky_P1.n - 1;
+poutre_cholesky_P1.d_centrale[lastP1] = 1.0;
+poutre_cholesky_P1.d_inf1[lastP1-1]   = 0.0;
+poutre_cholesky_P1.d_sup1[lastP1-1]   = 0.0; // Symétrie pour Cholesky
+poutre_cholesky_P1.b[lastP1]          = 0.0;
+
+// Résolution
+Resolution::cholesky_P1(poutre_cholesky_P1);
+
+
+// =========================================================
+// SECTION CHOLESKY P2
+// =========================================================
+Poutre poutre_cholesky_P2(nb_noeuds, longueur, TypeEF::P2, c, f);
+Methode::appliquerEF_P2(poutre_cholesky_P2);
+
+// CONDITIONS AUX LIMITES (Crucial pour éviter le -nan)
+// Blocage Noeud 0
+poutre_cholesky_P2.d_centrale[0] = 1.0;
+poutre_cholesky_P2.d_sup1[0] = 0.0;
+poutre_cholesky_P2.d_sup2[0] = 0.0;
+poutre_cholesky_P2.d_inf1[0] = 0.0; // Symétrie
+poutre_cholesky_P2.d_inf2[0] = 0.0; // Symétrie
+poutre_cholesky_P2.b[0] = 0.0;
+
+// Blocage Noeud n-1
+int lastP2 = poutre_cholesky_P2.n - 1;
+poutre_cholesky_P2.d_centrale[lastP2] = 1.0;
+poutre_cholesky_P2.d_inf1[lastP2-1] = 0.0;
+poutre_cholesky_P2.d_inf2[lastP2-2] = 0.0;
+poutre_cholesky_P2.d_sup1[lastP2-1] = 0.0; // Symétrie
+poutre_cholesky_P2.d_sup2[lastP2-2] = 0.0; // Symétrie
+poutre_cholesky_P2.b[lastP2] = 0.0;
+
+Resolution::cholesky_P2(poutre_cholesky_P2);
+
 std::cout << "\nComparaison (x | u_P1 | u_P2) :" << std::endl;
 int nb_points = std::min(poutreP1.n, poutreP2.n); // Pour éviter de sortir du tableau
 
+
+
+std::cout << "\n" << std::string(110, '=') << std::endl;
+std::cout << std::left << std::setw(15) << "x_val" 
+          << " | " << std::setw(12) << "u_P1" 
+          << " | " << std::setw(12) << "u_P2" 
+          << " | " << std::setw(18) << "u_chol_P1" 
+          << " | " << std::setw(18) << "u_chol_P2" << std::endl;
+std::cout << std::string(110, '-') << std::endl;
+
 for (int i = 0; i < nb_points; ++i) {
-    std::cout << "x_P1=" << i * poutreP1.h << " | u_P1: " << poutreP1.u[i] 
-              << " \t x_P2=" << i * poutreP2.h << " | u_P2: " << poutreP2.u[i] << std::endl;
+    std::cout << std::fixed << std::setprecision(4)
+              << std::left << std::setw(15) << i * poutreP1.h 
+              << " | " << std::setw(12) << poutreP1.u[i] 
+              << " | " << std::setw(12) << poutreP2.u[i] 
+              << " | " << std::setw(18) << poutre_cholesky_P1.u[i] 
+              << " | " << std::setw(18) << poutre_cholesky_P2.u[i] 
+              << std::endl;
 }
+std::cout << std::string(110, '=') << std::endl;
 
     } catch (const std::exception& e) {
         std::cerr << "Erreur : " << e.what() << std::endl;
