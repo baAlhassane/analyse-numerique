@@ -240,7 +240,7 @@ if (arg < 1e-15) {
 
   void Resolution::jacobi_P1(Poutre& p, int max_iter, double tol){
 
-  }
+  } 
 
 
     void Resolution::jacobi_P2(Poutre& p, int max_iter, double tol){
