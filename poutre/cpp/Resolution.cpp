@@ -239,11 +239,88 @@ if (arg < 1e-15) {
     // Métho
 
   void Resolution::jacobi_P1(Poutre& p, int max_iter, double tol){
+        // Déclaration des vecteurs de travail
+        int n=p.n;
+      
+ std::vector<double> u_old(n, 0.0); // Vecteur pour stocker l'étape k
+
+
+for (int iter = 0; iter < max_iter; iter++) {
+    u_old = p.u; // On mémorise l'étape k complète
+    double max_diff = 0;
+
+    // 1. Calcul de la première ligne (i = 0)
+    // On stocke dans p.u (étape k+1) en utilisant u_old (étape k)
+    p.u[0] = (p.b[0] - p.d_sup1[0] * u_old[1]) / p.d_centrale[0];
+    max_diff = std::max(max_diff, std::abs(p.u[0] - u_old[0]));
+
+    // 2. Boucle pour les lignes intérieures
+    for (int i = 1; i < n - 1; i++) {
+        double sigma = p.d_inf1[i-1] * u_old[i-1] + p.d_sup1[i] * u_old[i+1];
+        p.u[i] = (p.b[i] - sigma) / p.d_centrale[i];
+        max_diff = std::max(max_diff, std::abs(p.u[i] - u_old[i]));
+    }
+
+    // 3. Calcul de la dernière ligne (i = n-1) si elle n'est pas fixée
+    int last = n - 1;
+    p.u[last] = (p.b[last] - p.d_inf1[last-1] * u_old[last-1]) / p.d_centrale[last];
+    max_diff = std::max(max_diff, std::abs(p.u[last] - u_old[last]));
+
+    if (max_diff < tol) break;
+}
 
   } 
 
 
     void Resolution::jacobi_P2(Poutre& p, int max_iter, double tol){
+
+               int n=p.n;
+      
+ std::vector<double> u_old(n, 0.0); // Vecteur pour stocker l'étape k
+
+  
+        
+std::vector<double> u_old(n, 0.0); 
+
+for (int iter = 0; iter < max_iter; iter++) {
+    double max_diff = 0;
+    u_old = p.u; // On fige l'étape k
+
+    // --- Ligne 0 ---
+    p.u[0] = (p.b[0] - p.d_sup1[0]*u_old[1] - p.d_sup2[0]*u_old[2]) / p.d_centrale[0];
+    max_diff = std::max(max_diff, std::abs(p.u[0] - u_old[0]));
+
+    // --- Ligne 1 ---
+    p.u[1] = (p.b[1] - p.d_inf1[0]*u_old[0] - p.d_sup1[1]*u_old[2] - p.d_sup2[1]*u_old[3]) / p.d_centrale[1];
+    max_diff = std::max(max_diff, std::abs(p.u[1] - u_old[1]));
+
+    // --- Cœur de la matrice (i=2 à n-3) ---
+    for (int i = 2; i < n - 2; i++) {
+        // Attention : tous les termes sont soustraits !
+        double sigma = p.d_inf2[i-2] * u_old[i-2] + 
+                       p.d_inf1[i-1] * u_old[i-1] + 
+                       p.d_sup1[i]   * u_old[i+1] + 
+                       p.d_sup2[i]   * u_old[i+2];
+
+        p.u[i] = (p.b[i] - sigma) / p.d_centrale[i];
+        max_diff = std::max(max_diff, std::abs(p.u[i] - u_old[i]));
+    }
+
+    // --- Ligne n-2 ---
+    int l1 = n - 2;
+    double sigma1 = p.d_inf2[l1-2]*u_old[l1-2] + p.d_inf1[l1-1]*u_old[l1-1] + p.d_sup1[l1]*u_old[l1+1];
+    p.u[l1] = (p.b[l1] - sigma1) / p.d_centrale[l1];
+    max_diff = std::max(max_diff, std::abs(p.u[l1] - u_old[l1]));
+
+    // --- Ligne n-1 ---
+    int l0 = n - 1;
+    double sigma0 = p.d_inf2[l0-2]*u_old[l0-2] + p.d_inf1[l0-1]*u_old[l0-1];
+    p.u[l0] = (p.b[l0] - sigma0) / p.d_centrale[l0];
+    max_diff = std::max(max_diff, std::abs(p.u[l0] - u_old[l0]));
+
+    if (max_diff < tol) break;
+}
+     
 
   }
    void Resolution::gaussSeidel_P1(Poutre& p, int max_iter, double tol) {
