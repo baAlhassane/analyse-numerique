@@ -41,7 +41,6 @@ void Resolution::tridiagonal(Poutre& p) {
         p.u[i] = y[i] - U[i] * p.u[i+1];
     }
 }
-
 void Resolution::pentadiagonal(Poutre& p) { //P2 
 
     int n = p.n;
@@ -127,6 +126,7 @@ std::cout << "DEBUG SOLVEUR: u[5] final = " << p.u[5] << std::endl;
 
 
 }
+
 
 
 
@@ -272,15 +272,11 @@ for (int iter = 0; iter < max_iter; iter++) {
   } 
 
 
-    void Resolution::jacobi_P2(Poutre& p, int max_iter, double tol){
+void Resolution::jacobi_P2(Poutre& p, int max_iter, double tol){
 
                int n=p.n;
       
  std::vector<double> u_old(n, 0.0); // Vecteur pour stocker l'étape k
-
-  
-        
-std::vector<double> u_old(n, 0.0); 
 
 for (int iter = 0; iter < max_iter; iter++) {
     double max_diff = 0;
@@ -317,20 +313,102 @@ for (int iter = 0; iter < max_iter; iter++) {
     double sigma0 = p.d_inf2[l0-2]*u_old[l0-2] + p.d_inf1[l0-1]*u_old[l0-1];
     p.u[l0] = (p.b[l0] - sigma0) / p.d_centrale[l0];
     max_diff = std::max(max_diff, std::abs(p.u[l0] - u_old[l0]));
+    if (iter < 5) {
+    std::cout << "Iter " << iter << " | max_diff = " << max_diff << " | u[5] = " << p.u[5] << std::endl;
+}
 
     if (max_diff < tol) break;
 }
      
 
   }
-   void Resolution::gaussSeidel_P1(Poutre& p, int max_iter, double tol) {
-       
+   
+ void Resolution::gaussSeidel_P1(Poutre& p, int max_iter, double tol) {
+    int n = p.n;
+    int iter = 0;
+    // On initialise max_erreur > tol pour forcer l'entrée dans la boucle
+    double max_erreur = tol + 1.0; 
+
+    while (iter < max_iter && max_erreur > tol) {
+        max_erreur = 0.0; // On remet à zéro pour mesurer l'erreur de ce tour-ci
+
+        // Ligne 0
+        double u0_old = p.u[0];
+        p.u[0] = (p.b[0] - p.d_sup1[0] * p.u[1]) / p.d_centrale[0];
+        max_erreur = std::max(max_erreur, std::abs(p.u[0] - u0_old));
+
+        // Lignes intérieures
+        for (int i = 1; i < n - 1; i++) {
+            double u_i_old = p.u[i];
+            
+            // Gauss-Seidel pur : p.u[i-1] est déjà la nouvelle valeur !
+            p.u[i] = (p.b[i] - p.d_inf1[i - 1] * p.u[i - 1] - p.d_sup1[i] * p.u[i + 1]) / p.d_centrale[i];
+            
+            max_erreur = std::max(max_erreur, std::abs(p.u[i] - u_i_old));
+        }
+
+        // Dernière ligne
+        int last = n - 1;
+        double u_last_old = p.u[last];
+        p.u[last] = (p.b[last] - p.d_inf1[last - 1] * p.u[last - 1]) / p.d_centrale[last];
+        max_erreur = std::max(max_erreur, std::abs(p.u[last] - u_last_old));
+
+        iter++;
     }
 
-
-   void Resolution::gaussSeidel_P2(Poutre& p, int max_iter, double tol) {
-       
+    // Petit message de diagnostic
+    if (iter >= max_iter) {
+        std::cout << "Gauss-Seidel : Max d'itérations atteint (" << max_iter << ")" << std::endl;
     }
+}
+
+
+
+void Resolution::gaussSeidel_P2(Poutre& p, int max_iter, double tol) {
+    int n = p.n;
+    int iter = 0;
+    double max_erreur = tol + 1.0; 
+
+    while(iter < max_iter && max_erreur > tol){
+        max_erreur = 0.0; // Toujours remettre à zéro au début de l'itération
+
+        // --- LIGNE 0 ---
+        double old0 = p.u[0];
+        p.u[0] = (p.b[0] - p.d_sup1[0]*p.u[1] - p.d_sup2[0]*p.u[2]) / p.d_centrale[0];
+        max_erreur = std::max(max_erreur, std::abs(p.u[0] - old0));
+
+        // --- LIGNE 1 ---
+        double old1 = p.u[1];
+        p.u[1] = (p.b[1] - p.d_inf1[0]*p.u[0] - p.d_sup1[1]*p.u[2] - p.d_sup2[1]*p.u[3]) / p.d_centrale[1];
+        max_erreur = std::max(max_erreur, std::abs(p.u[1] - old1));
+
+        // --- CŒUR DE LA MATRICE (i=2 à n-3) ---
+        for (int i = 2; i < n - 2; i++) { 
+            double u_i_old = p.u[i];
+
+            // On soustrait tous les voisins. Note : p.u[i-2] et p.u[i-1] sont déjà les nouvelles valeurs !
+            double sigma = p.d_inf2[i-2]*p.u[i-2] + p.d_inf1[i-1]*p.u[i-1] + 
+                           p.d_sup1[i]*p.u[i+1]   + p.d_sup2[i]*p.u[i+2];
+
+            p.u[i] = (p.b[i] - sigma) / p.d_centrale[i];
+            max_erreur = std::max(max_erreur, std::abs(p.u[i] - u_i_old));
+        }
+
+        // --- LIGNE n-2 (last1) ---
+        int l1 = n - 2;
+        double old_l1 = p.u[l1];
+        p.u[l1] = (p.b[l1] - p.d_inf2[l1-2]*p.u[l1-2] - p.d_inf1[l1-1]*p.u[l1-1] - p.d_sup1[l1]*p.u[l1+1]) / p.d_centrale[l1];
+        max_erreur = std::max(max_erreur, std::abs(p.u[l1] - old_l1));
+
+        // --- LIGNE n-1 (last) ---
+        int l_last = n - 1;
+        double old_last = p.u[l_last];
+        p.u[l_last] = (p.b[l_last] - p.d_inf2[l_last-2]*p.u[l_last-2] - p.d_inf1[l_last-1]*p.u[l_last-1]) / p.d_centrale[l_last];
+        max_erreur = std::max(max_erreur, std::abs(p.u[l_last] - old_last));
+
+        iter++;
+    }
+}
 
 
 

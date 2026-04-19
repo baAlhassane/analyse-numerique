@@ -58,6 +58,9 @@ Resolution::tridiagonal(poutreP1);
         // Pour P2, on doit annuler les DEUX sur-diagonales partant de la ligne 0
       // Dans le main, après appliquerEF_P2 :
 
+      // Forçage manuel des conditions aux limites dans la structure de la poutre
+
+
 // Blocage Noeud 0 (Gauche)
 poutreP2.d_centrale[0] = 1.0;
 poutreP2.d_sup1[0] = 0.0;
@@ -70,6 +73,9 @@ poutreP2.d_centrale[last] = 1.0;
 poutreP2.d_inf1[last-1] = 0.0;
 poutreP2.d_inf2[last-2] = 0.0;
 poutreP2.b[last] = 0.0;
+
+
+
         // On assure aussi que les sous-diagonales n'impactent pas le noeud 0
         // (Géré par la sécurité dans ton solveur pentadiagonal)
 
@@ -137,28 +143,134 @@ poutre_cholesky_P2.b[lastP2] = 0.0;
 
 Resolution::cholesky_P2(poutre_cholesky_P2);
 
+
+// =========================================================
+// SECTION JACOBI P1 & P2
+// =========================================================
+int max_iter = 100000;
+double tol = 1e-7;
+
+// --- JACOBI P1 ---
+Poutre poutre_jac_P1(nb_noeuds, longueur, TypeEF::P1, c, f);
+Methode::appliquerEF_P1(poutre_jac_P1);
+// Dirichlet bords (0 et n-1)
+poutre_jac_P1.d_centrale[0] = 1.0; 
+poutre_jac_P1.d_sup1[0] = 0.0;
+ poutre_jac_P1.b[0] = 0.0;
+int lastJ1 = poutre_jac_P1.n - 1;
+poutre_jac_P1.d_centrale[lastJ1] = 1.0; 
+poutre_jac_P1.d_inf1[lastJ1-1] = 0.0;
+ poutre_jac_P1.b[lastJ1] = 0.0;
+
+Resolution::jacobi_P1(poutre_jac_P1, max_iter, tol);
+
+// --- JACOBI P2 ---
+Poutre poutre_jac_P2(nb_noeuds, longueur, TypeEF::P2, c, f);
+Methode::appliquerEF_P2(poutre_jac_P2);
+// Dirichlet bords
+poutre_jac_P2.d_centrale[0] = 1.0;
+ poutre_jac_P2.d_sup1[0] = 0.0; 
+ poutre_jac_P2.d_sup2[0] = 0.0; 
+ poutre_jac_P2.b[0] = 0.0;
+int lastJ2 = poutre_jac_P2.n - 1;
+poutre_jac_P2.d_centrale[lastJ2] = 1.0; 
+poutre_jac_P2.d_inf1[lastJ2-1] = 0.0;
+ poutre_jac_P2.d_inf2[lastJ2-2] = 0.0; 
+ poutre_jac_P2.b[lastJ2] = 0.0;
+
+Resolution::jacobi_P2(poutre_jac_P2, max_iter, tol);
+
+
+// =========================================================
+// SECTION GAUSS-SEIDEL P1 & P2
+// =========================================================
+
+// --- GAUSS-SEIDEL P1 ---
+Poutre poutre_gs_P1(nb_noeuds, longueur, TypeEF::P1, c, f);
+Methode::appliquerEF_P1(poutre_gs_P1);
+poutre_gs_P1.d_centrale[0] = 1.0; poutre_gs_P1.d_sup1[0] = 0.0; poutre_gs_P1.b[0] = 0.0;
+poutre_gs_P1.d_centrale[poutre_gs_P1.n-1] = 1.0; poutre_gs_P1.d_inf1[poutre_gs_P1.n-2] = 0.0; poutre_gs_P1.b[poutre_gs_P1.n-1] = 0.0;
+
+Resolution::gaussSeidel_P1(poutre_gs_P1, max_iter, tol);
+
+// --- GAUSS-SEIDEL P2 ---
+Poutre poutre_gs_P2(nb_noeuds, longueur, TypeEF::P2, c, f);
+Methode::appliquerEF_P2(poutre_gs_P2);
+poutre_gs_P2.d_centrale[0] = 1.0; poutre_gs_P2.d_sup1[0] = 0.0; poutre_gs_P2.d_sup2[0] = 0.0; poutre_gs_P2.b[0] = 0.0;
+int lastGS2 = poutre_gs_P2.n - 1;
+poutre_gs_P2.d_centrale[lastGS2] = 1.0; poutre_gs_P2.d_inf1[lastGS2-1] = 0.0; poutre_gs_P2.d_inf2[lastGS2-2] = 0.0; poutre_gs_P2.b[lastGS2] = 0.0;
+
+Resolution::gaussSeidel_P2(poutre_gs_P2, max_iter, tol);
+
+
+
+
+
+
+
+
+
+
 std::cout << "\nComparaison (x | u_P1 | u_P2) :" << std::endl;
-int nb_points = std::min(poutreP1.n, poutreP2.n); // Pour éviter de sortir du tableau
+// 1. On utilise le nombre de points de P1 comme référence pour la boucle
+int nb_points = poutreP1.n; 
 
+std::cout << "\n" << std::string(160, '=') << std::endl;
 
+// En-tête
+std::cout << std::left << std::setw(10) << "x_val" 
+          << " | " << std::setw(12) << "u_P1_Direct" 
+          << " | " << std::setw(12) << "u_P2_Direct" 
+          << " | " << std::setw(12) << "u_Chol_P1" 
+          << " | " << std::setw(12) << "u_Chol_P2" 
+          << " | " << std::setw(12) << "u_Jac_P1" 
+          << " | " << std::setw(12) << "u_Jac_P2" 
+          << " | " << std::setw(12) << "u_GS_P1" 
+          << " | " << std::setw(12) << "u_GS_P2" << std::endl;
 
-std::cout << "\n" << std::string(110, '=') << std::endl;
-std::cout << std::left << std::setw(15) << "x_val" 
-          << " | " << std::setw(12) << "u_P1" 
-          << " | " << std::setw(12) << "u_P2" 
-          << " | " << std::setw(18) << "u_chol_P1" 
-          << " | " << std::setw(18) << "u_chol_P2" << std::endl;
-std::cout << std::string(110, '-') << std::endl;
+std::cout << std::string(160, '-') << std::endl;
 
+// 2. Boucle d'affichage intelligente
 for (int i = 0; i < nb_points; ++i) {
-    std::cout << std::fixed << std::setprecision(4)
-              << std::left << std::setw(15) << i * poutreP1.h 
+    // x est calculé sur la base de P1
+    double x = i * poutreP1.h;
+    
+    // Indice correspondant pour P2 (car maillage 2x plus fin)
+    int i2 = 2 * i; 
+
+    std::cout << std::fixed << std::setprecision(5)
+              << std::left << std::setw(10) << x 
               << " | " << std::setw(12) << poutreP1.u[i] 
-              << " | " << std::setw(12) << poutreP2.u[i] 
-              << " | " << std::setw(18) << poutre_cholesky_P1.u[i] 
-              << " | " << std::setw(18) << poutre_cholesky_P2.u[i] 
+              << " | " << std::setw(12) << (i2 < poutreP2.n ? poutreP2.u[i2] : 0.0) 
+              << " | " << std::setw(12) << poutre_cholesky_P1.u[i] 
+              << " | " << std::setw(12) << (i2 < poutre_cholesky_P2.n ? poutre_cholesky_P2.u[i2] : 0.0)
+              << " | " << std::setw(12) << poutre_jac_P1.u[i] 
+              << " | " << std::setw(12) << (i2 < poutre_jac_P2.n ? poutre_jac_P2.u[i2] : 0.0)
+              << " | " << std::setw(12) << poutre_gs_P1.u[i] 
+              << " | " << std::setw(12) << (i2 < poutre_gs_P2.n ? poutre_gs_P2.u[i2] : 0.0)
               << std::endl;
 }
+
+std::cout << std::string(160, '=') << std::endl;
+
+
+// std::cout << "\n" << std::string(110, '=') << std::endl;
+// std::cout << std::left << std::setw(15) << "x_val" 
+//           << " | " << std::setw(12) << "u_P1" 
+//           << " | " << std::setw(12) << "u_P2" 
+//           << " | " << std::setw(18) << "u_chol_P1" 
+//           << " | " << std::setw(18) << "u_chol_P2" << std::endl;
+// std::cout << std::string(110, '-') << std::endl;
+
+// for (int i = 0; i < nb_points; ++i) {
+//     std::cout << std::fixed << std::setprecision(4)
+//               << std::left << std::setw(15) << i * poutreP1.h 
+//               << " | " << std::setw(12) << poutreP1.u[i] 
+//               << " | " << std::setw(12) << poutreP2.u[i] 
+//               << " | " << std::setw(18) << poutre_cholesky_P1.u[i] 
+//               << " | " << std::setw(18) << poutre_cholesky_P2.u[i] 
+//               << std::endl;
+// }
 std::cout << std::string(110, '=') << std::endl;
 
     } catch (const std::exception& e) {
