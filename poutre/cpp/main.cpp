@@ -8,9 +8,12 @@
 #include "TypeEF.h"
 
 #include <iomanip> // Indispensable pour setw et setprecision
+#include <chrono>
 
 
 //cd ../../../home/alhassaneba/document/analyse_numerique/poutre/cpp/
+ //g++ -Wall -o simulation main.cpp Poutre.cpp Methode.cpp Resolution.cpp
+ // ./simulation
 
 int main() {
     try {
@@ -39,10 +42,11 @@ poutreP1.d_centrale[lastP1_simple] = 1.0;
 poutreP1.d_inf1[lastP1_simple - 1] = 0.0; // On coupe la liaison avec l'avant-dernier noeud
 poutreP1.b[lastP1_simple] = 0.0;
 
+auto start_thomas = std::chrono::high_resolution_clock::now();
 Resolution::tridiagonal(poutreP1);
-
-        Resolution::tridiagonal(poutreP1);
-
+auto end_thomas = std::chrono::high_resolution_clock::now();
+// Calcul de la durée
+std::chrono::duration<double, std::micro> time_thomas = end_thomas - start_thomas;
         // =========================================================
         // SECTION P2 : PENTADIAGONAL (Ton nouveau code)
         // =========================================================
@@ -84,7 +88,10 @@ std::cout << "DEBUG: Diagonale milieu = " << poutreP2.d_centrale[n/2] << std::en
 std::cout << "DEBUG: Force milieu = " << poutreP2.b[n/2] << std::endl;
 
         // 3. Résolution avec ton nouveau solveur
+        auto start_penta = std::chrono::high_resolution_clock::now();
         Resolution::pentadiagonal(poutreP2);
+        auto end_penta = std::chrono::high_resolution_clock::now();
+std::chrono::duration<double, std::micro> time_penta = end_penta - start_penta;
         std::cout << "--- Systeme P2 resolu (Pentadiagonal) ---" << std::endl;
 
         // =========================================================
@@ -114,8 +121,10 @@ poutre_cholesky_P1.d_sup1[lastP1-1]   = 0.0; // Symétrie pour Cholesky
 poutre_cholesky_P1.b[lastP1]          = 0.0;
 
 // Résolution
+auto start_cholesky_P1 = std::chrono::high_resolution_clock::now();
 Resolution::cholesky_P1(poutre_cholesky_P1);
-
+auto end_start_cholesky_P1 = std::chrono::high_resolution_clock::now();
+std::chrono::duration<double, std::micro> time_chol_p1 = end_start_cholesky_P1 - start_cholesky_P1;
 
 // =========================================================
 // SECTION CHOLESKY P2
@@ -141,8 +150,10 @@ poutre_cholesky_P2.d_sup1[lastP2-1] = 0.0; // Symétrie
 poutre_cholesky_P2.d_sup2[lastP2-2] = 0.0; // Symétrie
 poutre_cholesky_P2.b[lastP2] = 0.0;
 
+auto start_cholesky_P2 = std::chrono::high_resolution_clock::now();
 Resolution::cholesky_P2(poutre_cholesky_P2);
-
+auto end_cholesky_P2 = std::chrono::high_resolution_clock::now();
+std::chrono::duration<double, std::micro> time_chol_p2 = end_cholesky_P2 - start_cholesky_P2;
 
 // =========================================================
 // SECTION JACOBI P1 & P2
@@ -162,7 +173,11 @@ poutre_jac_P1.d_centrale[lastJ1] = 1.0;
 poutre_jac_P1.d_inf1[lastJ1-1] = 0.0;
  poutre_jac_P1.b[lastJ1] = 0.0;
 
+ auto start_jacobi_P1 = std::chrono::high_resolution_clock::now();
 Resolution::jacobi_P1(poutre_jac_P1, max_iter, tol);
+ auto end_jacobi_P1 = std::chrono::high_resolution_clock::now();
+std::chrono::duration<double, std::milli> time_jac_p1 = end_jacobi_P1 - start_jacobi_P1;
+
 
 // --- JACOBI P2 ---
 Poutre poutre_jac_P2(nb_noeuds, longueur, TypeEF::P2, c, f);
@@ -178,7 +193,10 @@ poutre_jac_P2.d_inf1[lastJ2-1] = 0.0;
  poutre_jac_P2.d_inf2[lastJ2-2] = 0.0; 
  poutre_jac_P2.b[lastJ2] = 0.0;
 
+  auto start_jacobi_P2 = std::chrono::high_resolution_clock::now();
 Resolution::jacobi_P2(poutre_jac_P2, max_iter, tol);
+ auto end_jacobi_P2 = std::chrono::high_resolution_clock::now();
+std::chrono::duration<double, std::milli> time_jac_p2   =  end_jacobi_P2 - start_jacobi_P2 ;
 
 
 // =========================================================
@@ -188,19 +206,39 @@ Resolution::jacobi_P2(poutre_jac_P2, max_iter, tol);
 // --- GAUSS-SEIDEL P1 ---
 Poutre poutre_gs_P1(nb_noeuds, longueur, TypeEF::P1, c, f);
 Methode::appliquerEF_P1(poutre_gs_P1);
-poutre_gs_P1.d_centrale[0] = 1.0; poutre_gs_P1.d_sup1[0] = 0.0; poutre_gs_P1.b[0] = 0.0;
-poutre_gs_P1.d_centrale[poutre_gs_P1.n-1] = 1.0; poutre_gs_P1.d_inf1[poutre_gs_P1.n-2] = 0.0; poutre_gs_P1.b[poutre_gs_P1.n-1] = 0.0;
+poutre_gs_P1.d_centrale[0] = 1.0; 
+poutre_gs_P1.d_sup1[0] = 0.0; 
+poutre_gs_P1.b[0] = 0.0;
+poutre_gs_P1.d_centrale[poutre_gs_P1.n-1] = 1.0; 
+poutre_gs_P1.d_inf1[poutre_gs_P1.n-2] = 0.0;
+ poutre_gs_P1.b[poutre_gs_P1.n-1] = 0.0;
 
+auto start_gs = std::chrono::high_resolution_clock::now();
 Resolution::gaussSeidel_P1(poutre_gs_P1, max_iter, tol);
+auto end_gs = std::chrono::high_resolution_clock::now();
+// Pour GS, on utilise souvent les millisecondes car c'est plus lent
+std::chrono::duration<double, std::milli> time_gs_p1 = end_gs - start_gs;
 
 // --- GAUSS-SEIDEL P2 ---
 Poutre poutre_gs_P2(nb_noeuds, longueur, TypeEF::P2, c, f);
 Methode::appliquerEF_P2(poutre_gs_P2);
-poutre_gs_P2.d_centrale[0] = 1.0; poutre_gs_P2.d_sup1[0] = 0.0; poutre_gs_P2.d_sup2[0] = 0.0; poutre_gs_P2.b[0] = 0.0;
-int lastGS2 = poutre_gs_P2.n - 1;
-poutre_gs_P2.d_centrale[lastGS2] = 1.0; poutre_gs_P2.d_inf1[lastGS2-1] = 0.0; poutre_gs_P2.d_inf2[lastGS2-2] = 0.0; poutre_gs_P2.b[lastGS2] = 0.0;
+poutre_gs_P2.d_centrale[0] = 1.0; 
+poutre_gs_P2.d_sup1[0] = 0.0; 
+poutre_gs_P2.d_sup2[0] = 0.0; 
+poutre_gs_P2.b[0] = 0.0;
 
+int lastGS2 = poutre_gs_P2.n - 1;
+poutre_gs_P2.d_centrale[lastGS2] = 1.0; 
+poutre_gs_P2.d_inf1[lastGS2-1] = 0.0;
+poutre_gs_P2.d_inf2[lastGS2-2] = 0.0; 
+poutre_gs_P2.b[lastGS2] = 0.0;
+
+auto start_gs_P2 = std::chrono::high_resolution_clock::now();
 Resolution::gaussSeidel_P2(poutre_gs_P2, max_iter, tol);
+auto end_gs_P2 = std::chrono::high_resolution_clock::now();
+std::chrono::duration<double, std::milli> time_gs_p2 = end_gs_P2 -start_gs_P2 ;
+
+
 
 
 
@@ -252,6 +290,38 @@ for (int i = 0; i < nb_points; ++i) {
 }
 
 std::cout << std::string(160, '=') << std::endl;
+
+
+
+
+std::cout << " " << std::endl;
+
+
+
+
+
+
+
+std::cout << "\n" << std::string(60, '=') << std::endl;
+std::cout << "          TABLEAU DES PERFORMANCES (n=" << nb_noeuds << ")" << std::endl;
+std::cout << std::string(60, '-') << std::endl;
+std::cout << std::left << std::setw(25) << "Methode" << " | " << "Temps de calcul" << std::endl;
+std::cout << std::string(60, '-') << std::endl;
+
+std::cout << std::setw(25) << "tridiagonal LU  (P1)"           << " | " << time_thomas.count() << " us" << std::endl;
+std::cout << std::setw(25) << "Pentadiagonal LU (P2)"    << " | " << time_penta.count() << " us" << std::endl;
+std::cout << std::setw(25) << "Cholesky (P1)"         << " | " << time_chol_p1.count() << " us" << std::endl;
+std::cout << std::setw(25) << "Cholesky (P2)"         << " | " << time_chol_p2.count() << " us" << std::endl;
+std::cout << std::setw(25) << "Jacobi (P1)"           << " | " << time_jac_p1.count() << " ms" << std::endl;
+std::cout << std::setw(25) << "Jacobi (P2)"           << " | " << time_jac_p2.count() << " ms" << std::endl;
+std::cout << std::setw(25) << "Gauss-Seidel (P1)"     << " | " << time_gs_p1.count() << " ms" << std::endl;
+std::cout << std::setw(25) << "Gauss-Seidel (P2)"     << " | " << time_gs_p2.count() << " ms" << std::endl;
+
+
+
+
+
+std::cout << std::string(60, '=') << std::endl;
 
 
 // std::cout << "\n" << std::string(110, '=') << std::endl;

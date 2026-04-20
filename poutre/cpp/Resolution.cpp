@@ -190,7 +190,8 @@ void Resolution::cholesky_P2(Poutre& p) {
 
     // --- ÉTAPE 2 : Colonne 1 (Une seule correction possible) ---
     if (n > 1) {
-        L_diag_principal[1] = std::sqrt(p.d_centrale[1] - std::pow(L_diag1[0], 2));
+        L_diag_principal[1] = std::sqrt(p.d_centrale[1] - L_diag1[0]*L_diag1[0]);
+       // L_diag_principal[1] = std::sqrt(p.d_centrale[1] - std::pow(L_diag1[0], 2));
         if (n > 2) L_diag1[1] = (p.d_inf1[1] - L_diag2[0] * L_diag1[0]) / L_diag_principal[1];
         if (n > 3) L_diag2[1] = p.d_inf2[1] / L_diag_principal[1];
         y[1] = (p.b[1] - L_diag1[0] * y[0]) / L_diag_principal[1];
@@ -198,14 +199,13 @@ void Resolution::cholesky_P2(Poutre& p) {
 
     // --- ÉTAPE 3 : Colonnes 2 à n-1 (Cas général, deux corrections) ---
     for (int j = 2; j < n; j++) {
-double arg = p.d_centrale[j] - std::pow(L_diag1[j-1], 2) - std::pow(L_diag2[j-2], 2);
+        double arg = p.d_centrale[j] - (L_diag1[j-1] * L_diag1[j-1]) - (L_diag2[j-2] * L_diag2[j-2]);
+//double arg = p.d_centrale[j] - std::pow(L_diag1[j-1], 2) - std::pow(L_diag2[j-2], 2);
 if (arg < 1e-15) { 
     // Si c'est proche de 0 ou négatif, c'est que la matrice est mal conditionnée
     // ou les conditions aux limites sont absentes.
     throw std::runtime_error("Erreur Cholesky : Pivot non positif");
 }
- 
-
         // Pivot
            L_diag_principal[j] = std::sqrt(arg);
         //L_diag_principal[j] = std::sqrt(p.d_centrale[j] - std::pow(L_diag1[j-1], 2) - std::pow(L_diag2[j-2], 2));
@@ -244,10 +244,12 @@ if (arg < 1e-15) {
       
  std::vector<double> u_old(n, 0.0); // Vecteur pour stocker l'étape k
 
-
-for (int iter = 0; iter < max_iter; iter++) {
+int iter=0;
+double max_diff= tol+1;
+while ( iter < max_iter &&  max_diff > tol) {
     u_old = p.u; // On mémorise l'étape k complète
-    double max_diff = 0;
+    max_diff=0;
+   
 
     // 1. Calcul de la première ligne (i = 0)
     // On stocke dans p.u (étape k+1) en utilisant u_old (étape k)
@@ -265,8 +267,9 @@ for (int iter = 0; iter < max_iter; iter++) {
     int last = n - 1;
     p.u[last] = (p.b[last] - p.d_inf1[last-1] * u_old[last-1]) / p.d_centrale[last];
     max_diff = std::max(max_diff, std::abs(p.u[last] - u_old[last]));
+    iter++;
 
-    if (max_diff < tol) break;
+   // if (max_diff < tol) break;
 }
 
   } 
