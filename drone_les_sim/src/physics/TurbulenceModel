@@ -1,0 +1,14 @@
+// Physics/TurbulenceModel.hpp
+class TurbulenceModel {
+public:
+    virtual ~TurbulenceModel() = default;
+    
+    // Calcule la viscosité turbulente nu_t sur tout le domaine
+    virtual void computeTurbulentViscosity(
+        const Field2D& u, 
+        const Field2D& v, 
+        Field2D& nu_t, 
+        double dx, 
+        double dy) = 0;
+};
+

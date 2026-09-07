@@ -67,7 +67,7 @@ void Methode::appliquerEF_P2(Poutre& p){
     double resistance_flexion_extra_1 = -8*1.0 / (3*h_element);
     double resistance_flexion_extra_2 = 1.0 / (3*h_element);
 
-
+ 
 
     for( int e=0; e<n_elements; ++e){
 
@@ -127,6 +127,37 @@ void Methode::appliquerEF_P2(Poutre& p){
   
 
 
+void Methode::appliquerDF(Poutre& p) {
+    double h = p.h;
+    int n = p.n;
+    auto& c_func = p.c;
+    auto& f_func = p.f;
+
+    // Le pas au carré pour la dérivée seconde
+    double h2 = h * h;
+
+    for (int i = 0; i < n; ++i) {
+        double x_i = i * h;
+        double ci = c_func(x_i);
+        double fi = f_func(x_i);
+
+        // 1. Terme de la diagonale centrale
+        // Provient de : -(-2/h^2) + ci = 2/h^2 + ci
+        p.d_centrale[i] = (2.0 / h2) + ci;
+
+        // 2. Termes des diagonales adjacentes (u_{i-1} et u_{i+1})
+        // Provient de : -(1/h^2)
+        if (i > 0) {
+            p.d_inf1[i-1] = -1.0 / h2;
+        }
+        if (i < n - 1) {
+            p.d_sup1[i] = -1.0 / h2;
+        }
+
+        // 3. Second membre
+        p.b[i] = fi;
+    }
+}
 
 
 
@@ -167,8 +198,3 @@ void Methode::appliquerEF_P2(Poutre& p){
 //     }
 
 
-
-void   Methode::appliquerDF(Poutre& p) {
-    
-     
-    }

@@ -1,0 +1,21 @@
+drone_les_sim/
+├── CMakeLists.txt
+├── README.md
+├── src/
+│   ├── main.cpp
+│   ├── core/                  # Structure de données fondamentales
+│   │   ├── Mesh.hpp
+│   │   ├── Field.hpp
+│   │   └── BoundaryConditions.hpp
+│   ├── physics/               # Modèles physiques & turbulence
+│   │   ├── TurbulenceModel.hpp
+│   │   ├── SmagorinskyModel.hpp
+│   │   └── WALEModel.hpp
+│   ├── solvers/               # Solveurs Navier-Stokes & Pression
+│   │   ├── NavStokesSolver.hpp
+│   │   ├── PoissonSolver.hpp
+│   │   └── ProjectionMethod.hpp
+│   └── io/                    # Export des résultats (ParaView / VTK)
+│       └── VTKWriter.hpp
+└── tests/
+    └── test_poisson.cpp

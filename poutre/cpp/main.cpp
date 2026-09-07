@@ -5,6 +5,8 @@
 #include "Methode.h"
 #include "Resolution.h"
 
+
+#include "gauss.hpp"
 #include "TypeEF.h"
 
 #include <iomanip> // Indispensable pour setw et setprecision
@@ -70,7 +72,7 @@ poutreP2.d_centrale[0] = 1.0;
 poutreP2.d_sup1[0] = 0.0;
 poutreP2.d_sup2[0] = 0.0;
 poutreP2.b[0] = 0.0;
-
+ 
 // Blocage Noeud n-1 (Droite) - INDISPENSABLE
 int last = poutreP2.n - 1;
 poutreP2.d_centrale[last] = 1.0;
@@ -190,8 +192,8 @@ poutre_jac_P2.d_centrale[0] = 1.0;
 int lastJ2 = poutre_jac_P2.n - 1;
 poutre_jac_P2.d_centrale[lastJ2] = 1.0; 
 poutre_jac_P2.d_inf1[lastJ2-1] = 0.0;
- poutre_jac_P2.d_inf2[lastJ2-2] = 0.0; 
- poutre_jac_P2.b[lastJ2] = 0.0;
+poutre_jac_P2.d_inf2[lastJ2-2] = 0.0; 
+poutre_jac_P2.b[lastJ2] = 0.0;
 
   auto start_jacobi_P2 = std::chrono::high_resolution_clock::now();
 Resolution::jacobi_P2(poutre_jac_P2, max_iter, tol);
@@ -324,6 +326,29 @@ std::cout << std::setw(25) << "Gauss-Seidel (P2)"     << " | " << time_gs_p2.cou
 std::cout << std::string(60, '=') << std::endl;
 
 
+
+
+
+// std::vector<std::vector<double>> matrice = {
+//     {2,  1, -1},
+//     {-3, -1,  2},
+//     {-2,  1,  2}
+// };
+
+std::vector<std::vector<double>> matrice = {
+    { 2,  1, -1,  3,  0,  1},
+    {-4, -1,  4, -4,  2,  0},
+    { 2,  3,  3,  1, -1,  3},
+    { 6,  1, -1, 14,  2,  9},
+    { 0,  2,  5, -3,  6,  4},
+    {-2,  1,  8,  2,  1, 15}
+};
+Gauss gauss;
+gauss.gausse_methode(matrice ); 
+gauss.afficher_matrice(matrice); 
+
+
+
 // std::cout << "\n" << std::string(110, '=') << std::endl;
 // std::cout << std::left << std::setw(15) << "x_val" 
 //           << " | " << std::setw(12) << "u_P1" 
@@ -346,6 +371,11 @@ std::cout << std::string(110, '=') << std::endl;
     } catch (const std::exception& e) {
         std::cerr << "Erreur : " << e.what() << std::endl;
     }
+
+
+
+
+
     return 0;
 }
 
