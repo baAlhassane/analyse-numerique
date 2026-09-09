@@ -1,13 +1,13 @@
 #ifndef POISSON_SOLVER_HPP
 #define POISSON_SOLVER_HPP
 
-#include "core/Field.hpp"
+#include "core/Field2D.hpp"
 #include "core/Mesh.hpp"
 #include <cmath>
 #include <algorithm>
 
-namespace drone {
 
+        
 class PoissonSolver {
 private:
     int max_iter_;
@@ -69,6 +69,6 @@ private:
     }
 };
 
-} // namespace drone
+
 
 #endif // POISSON_SOLVER_HPP

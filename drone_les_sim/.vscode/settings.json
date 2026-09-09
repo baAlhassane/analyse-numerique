@@ -1,3 +1,6 @@
 {
-    "C_Cpp.errorSquiggles": "disabled"
+    "C_Cpp.errorSquiggles": "enabled",
+    "C_Cpp.codeAnalysis.runAutomatically": true,
+    "C_Cpp.workspaceParsingPriority": "high",
+    "C_Cpp.intelliSenseUpdateDelay": 300
 }

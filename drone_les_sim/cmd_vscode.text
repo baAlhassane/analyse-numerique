@@ -1,3 +1,12 @@
 Formater le document : Shift + Alt + F (Shift + Option + F)
 Dupliquer la ligne actuelle vers le haut : Shift + Alt + ↑ (Shift + Option + ↑)
 insérer une nouvelle ligne au-dessus : Ctrl + Shift + Entrée
+
+
+
+1. Revenir à la taille normale (Réinitialiser le zoom)
+Pour réinitialiser immédiatement l'affichage à sa taille par défaut (100 %) :
+
+Raccourci : Ctrl + Numpad 0 (le 0 du pavé numérique)
+
+Via la palette : Appuie sur Ctrl + Shift + P, tape Reset Zoom et valide par Entrée.,

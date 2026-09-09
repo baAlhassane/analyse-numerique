@@ -1,4 +1,5 @@
 // Physics/TurbulenceModel.hpp
+#include "core/Field2D.hpp"
 class TurbulenceModel {
 public:
     virtual ~TurbulenceModel() = default;

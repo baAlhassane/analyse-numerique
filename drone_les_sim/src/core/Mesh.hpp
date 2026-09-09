@@ -1,7 +1,6 @@
 #ifndef MESH_HPP
 #define MESH_HPP
 
-namespace drone {
 
 class Mesh {
 private:
@@ -30,6 +29,5 @@ public:
     double y(int j) const { return (j + 0.5) * dy_; }
 };
 
-} // namespace drone
 
 #endif // MESH_HPP

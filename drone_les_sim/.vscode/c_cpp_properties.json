@@ -1,14 +1,18 @@
 {
     "configurations": [
         {
-            "name": "Linux",
+            "name": "WSL-GCC",
             "includePath": [
-                "${workspaceFolder}/**"
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/src/core",
+                "${workspaceFolder}/src/physics",
+                "${workspaceFolder}/src/solvers",
+                "${workspaceFolder}/src/io"
             ],
             "defines": [],
-            "compilerPath": "/usr/bin/gcc",
+            "compilerPath": "/usr/bin/g++",
             "cStandard": "c17",
-            "cppStandard": "gnu++17",
+            "cppStandard": "c++20",
             "intelliSenseMode": "linux-gcc-x64"
         }
     ],
