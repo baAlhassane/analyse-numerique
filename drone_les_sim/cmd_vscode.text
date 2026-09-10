@@ -2,7 +2,7 @@ Formater le document : Shift + Alt + F (Shift + Option + F)
 Dupliquer la ligne actuelle vers le haut : Shift + Alt + ↑ (Shift + Option + ↑)
 insérer une nouvelle ligne au-dessus : Ctrl + Shift + Entrée
 
-
+-------------------------------------------------------------
 
 1. Revenir à la taille normale (Réinitialiser le zoom)
 Pour réinitialiser immédiatement l'affichage à sa taille par défaut (100 %) :
@@ -10,3 +10,17 @@ Pour réinitialiser immédiatement l'affichage à sa taille par défaut (100 %) 
 Raccourci : Ctrl + Numpad 0 (le 0 du pavé numérique)
 
 Via la palette : Appuie sur Ctrl + Shift + P, tape Reset Zoom et valide par Entrée.,
+
+
+-------------------------------------------------------------
+
+Activer l'extension C/C++ dans WSL
+Ouvre l'onglet Extensions à gauche : Ctrl + Shift + X
+
+Dans la barre de recherche, tape : C/C++ (publiée par Microsoft).
+
+Regarde l'encadré de l'extension :
+
+Si tu vois un bouton bleu Install in WSL: Ubuntu-24.04 (ou le nom de ta distro), clique dessus.
+
+Si elle est déjà installée, vérifie qu'elle n'est pas grisée avec la mention Disabled. Si c'est le cas, clique sur Enable.

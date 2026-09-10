@@ -7,7 +7,8 @@
 #include <algorithm>
 
 
-        
+   namespace drone {
+     
 class PoissonSolver {
 private:
     int max_iter_;
@@ -69,6 +70,6 @@ private:
     }
 };
 
-
+   } // namespace drone 
 
 #endif // POISSON_SOLVER_HPP

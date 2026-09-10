@@ -1,36 +1,70 @@
-// Solvers/NavStokesSolver.hpp
+#ifndef NAV_STOKES_SOLVER_HPP
+#define NAV_STOKES_SOLVER_HPP
+
+#include "core/Mesh.hpp"
+#include "core/Field2D.hpp"
+#include "solvers/PoissonSolver.hpp"
+#include "physics/ProjectionMethod.hpp"
+#include "physics/TurbulenceModel.hpp"
+#include "io/VTKWriter.hpp"
+#include <memory>
+#include <string>
+
+namespace drone {
+
 class NavStokesSolver {
 private:
-    Grid grid_;
+    // 1. Géométrie et maillage
+    Mesh mesh_;
+
+    // 2. Champs physiques (Vitesse u, v et Pression p)
     Field2D u_, v_, p_;
+    
+    // 3. Champs intermédiaires de travail
     Field2D u_star_, v_star_;
     Field2D nu_t_;
-    
+
+    // 4. Moteurs algorithmiques et modèles
     std::unique_ptr<TurbulenceModel> les_model_;
     PoissonSolver poisson_solver_;
+    ProjectionMethod projection_method_;
     VTKWriter vtk_writer_;
 
-    double dt_, nu_mol_;
+    // 5. Paramètres physiques et temporels
+    double dt_;
+    double nu_mol_;
 
 public:
-    NavStokesSolver(const Grid& grid, double nu_mol, std::unique_ptr<TurbulenceModel> model)
-        : grid_(grid), nu_mol_(nu_mol), les_model_(std::move(model)) {}
+    // Constructeur
+    NavStokesSolver(const Mesh& mesh, double dt, double nu_mol, 
+                    std::unique_ptr<TurbulenceModel> model)
+        : mesh_(mesh),
+          u_(mesh.nx(), mesh.ny(), 0.0),
+          v_(mesh.nx(), mesh.ny(), 0.0),
+          p_(mesh.nx(), mesh.ny(), 0.0),
+          u_star_(mesh.nx(), mesh.ny(), 0.0),
+          v_star_(mesh.nx(), mesh.ny(), 0.0),
+          nu_t_(mesh.nx(), mesh.ny(), 0.0),
+          les_model_(std::move(model)),
+          poisson_solver_(1000, 1e-5, 1.7),
+          projection_method_(dt, 1.0),
+          dt_(dt),
+          nu_mol_(nu_mol)
+    {}
 
-    void step() {
-        // 1. Calculer nu_t avec le modèle LES choisi
-        les_model_->computeTurbulentViscosity(u_, v_, nu_t_, grid_.dx(), grid_.dy());
+    // Effectue un pas de temps complet
+    void step();
 
-        // 2. Calculer les vitesses intermédiaires u* et v* (Advection + Viscosité)
-        computePredictorVelocity();
-
-        // 3. Résoudre l'équation de Poisson pour P : div(grad P) = div(u*) / dt
-        poisson_solver_.solve(u_star_, v_star_, p_, dt_);
-
-        // 4. Corriger les vitesses u et v avec le gradient de P
-        correctVelocity();
+    // Exportation des données
+    void writeVTK(int step_number) {
+        vtk_writer_.write("output_" + std::to_string(step_number) + ".vtk", mesh_, u_, v_, p_);
     }
 
 private:
+    // Étape 1 : Calcul de la vitesse prédictive
     void computePredictorVelocity();
-    void correctVelocity();
 };
+
+} // namespace drone
+
+#endif // NAV_STOKES_SOLVER_HPP

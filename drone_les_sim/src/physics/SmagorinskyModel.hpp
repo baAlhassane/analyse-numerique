@@ -5,6 +5,7 @@
 #include <algorithm>
 #include "TurbulenceModel.hpp" // Hérite de la classe abstraite
 
+namespace drone { 
 class SmagorinskyModel : public TurbulenceModel {
 private:
     double Cs_; // Constante de Smagorinsky (ex: 0.17)
@@ -81,5 +82,7 @@ private:
         }
     }
 };
+
+}
 
 #endif // SMAGORINSKY_MODEL_HPP

@@ -1,5 +1,7 @@
 // Physics/TurbulenceModel.hpp
+#pragma once
 #include "core/Field2D.hpp"
+namespace drone {
 class TurbulenceModel {
 public:
     virtual ~TurbulenceModel() = default;
@@ -13,3 +15,4 @@ public:
         double dy) = 0;
 };
 
+   } // namespace drone 

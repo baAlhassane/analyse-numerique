@@ -6,7 +6,8 @@
 #include "solvers/PoissonSolver.hpp"
 
 
-
+namespace drone {
+    
 class ProjectionMethod {
 private:
     double dt_;
@@ -65,3 +66,5 @@ public:
 };
 
 #endif // PROJECTION_METHOD_HPP
+
+} // namespace drone
