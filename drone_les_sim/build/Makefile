@@ -129,6 +129,30 @@ sim_drone/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/sim_drone.dir/build.make CMakeFiles/sim_drone.dir/build
 .PHONY : sim_drone/fast
 
+src/io/VTKWriter.o: src/io/VTKWriter.cpp.o
+.PHONY : src/io/VTKWriter.o
+
+# target to build an object file
+src/io/VTKWriter.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sim_drone.dir/build.make CMakeFiles/sim_drone.dir/src/io/VTKWriter.cpp.o
+.PHONY : src/io/VTKWriter.cpp.o
+
+src/io/VTKWriter.i: src/io/VTKWriter.cpp.i
+.PHONY : src/io/VTKWriter.i
+
+# target to preprocess a source file
+src/io/VTKWriter.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sim_drone.dir/build.make CMakeFiles/sim_drone.dir/src/io/VTKWriter.cpp.i
+.PHONY : src/io/VTKWriter.cpp.i
+
+src/io/VTKWriter.s: src/io/VTKWriter.cpp.s
+.PHONY : src/io/VTKWriter.s
+
+# target to generate assembly for a file
+src/io/VTKWriter.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/sim_drone.dir/build.make CMakeFiles/sim_drone.dir/src/io/VTKWriter.cpp.s
+.PHONY : src/io/VTKWriter.cpp.s
+
 src/main.o: src/main.cpp.o
 .PHONY : src/main.o
 
@@ -210,6 +234,9 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... sim_drone"
+	@echo "... src/io/VTKWriter.o"
+	@echo "... src/io/VTKWriter.i"
+	@echo "... src/io/VTKWriter.s"
 	@echo "... src/main.o"
 	@echo "... src/main.i"
 	@echo "... src/main.s"

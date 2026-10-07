@@ -1,4 +1,6 @@
 file(REMOVE_RECURSE
+  "CMakeFiles/sim_drone.dir/src/io/VTKWriter.cpp.o"
+  "CMakeFiles/sim_drone.dir/src/io/VTKWriter.cpp.o.d"
   "CMakeFiles/sim_drone.dir/src/main.cpp.o"
   "CMakeFiles/sim_drone.dir/src/main.cpp.o.d"
   "CMakeFiles/sim_drone.dir/src/physics/note.cpp.o"

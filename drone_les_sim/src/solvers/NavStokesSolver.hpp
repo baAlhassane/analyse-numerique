@@ -34,6 +34,8 @@ private:
     double dt_;
     double nu_mol_;
 
+    
+
 public:
     // Constructeur
     NavStokesSolver(const Mesh& mesh, double dt, double nu_mol, 
@@ -53,17 +55,31 @@ public:
     {}
 
     // Effectue un pas de temps complet
+     double getMaxDivU() const {
+        return projection_method_.getMaxDivU();
+    }
     void step();
 
-    // Exportation des données
-    void writeVTK(int step_number) {
-        vtk_writer_.write("output_" + std::to_string(step_number) + ".vtk", mesh_, u_, v_, p_);
-    }
+   // ✅ Après :
+void writeVTK(int step_number) ;
+
+// --- ACCESSEURS CORRIGÉS ---
+    const Field2D& getU() const { return u_; }
+    const Field2D& getV() const { return v_; }
+    const Field2D& getP() const { return p_; }
+    const Field2D& getUStar() const { return u_star_; }
+    const Field2D& getVStar() const { return v_star_; }
+ 
 
 private:
     // Étape 1 : Calcul de la vitesse prédictive
     void computePredictorVelocity();
+
+
+
 };
+
+
 
 } // namespace drone
 
