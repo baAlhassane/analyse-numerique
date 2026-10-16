@@ -58,7 +58,7 @@ public:
                 double S_norm = std::sqrt(std::max(0.0, S_sq));
 
                 // --- Calcul de nu_t ---
-                nu_t(i, j) = l_mix_sq * S_norm;
+                nu_t(i, j) = l_mix_sq * S_norm; 
             }
         }
 

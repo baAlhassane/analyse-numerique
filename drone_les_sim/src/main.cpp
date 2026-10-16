@@ -16,7 +16,7 @@ int main() {
     std::filesystem::create_directory("output");
 
     const int nx = 50, ny = 50;
-    const double Lx = 1.0, Ly = 1.0;
+    const double Lx = 1.0, Ly = 1.0; 
 
     Mesh mesh(nx, ny, Lx, Ly);
 
@@ -25,7 +25,7 @@ int main() {
     const int max_steps = 500;
     const int save_every = 50;
 
-    auto les_model = std::make_unique<SmagorinskyModel>(0.18);
+    auto les_model = std::make_unique<SmagorinskyModel>(0.17);
 
     NavStokesSolver solver(
         mesh,
@@ -278,9 +278,9 @@ int main() {
     // BOUCLE TEMPORELLE
     // ============================================================
 
-    for (int step = 1; step <= max_steps; ++step) {
+    for (int step = 1; step <= max_steps; step++) {
 
-        solver.step();
+        solver.step(step);
 
         if (step % save_every == 0) {
 
@@ -294,9 +294,15 @@ int main() {
                       << std::endl;
 
             inspecterChamps(step);
+
+          
         }
+
+        
+
     }
 
+   
 
     std::cout << "=== Simulation terminée avec succès ==="
               << std::endl;

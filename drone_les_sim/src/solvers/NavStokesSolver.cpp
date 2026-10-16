@@ -8,6 +8,17 @@ void NavStokesSolver::computePredictorVelocity() {
     const int nx = mesh_.nx();
     const int ny = mesh_.ny();
 
+
+      if (les_model_) {
+        les_model_->computeTurbulentViscosity(
+            u_,
+            v_,
+            nu_t_,
+            dx,
+            dy
+        );
+    }
+
     for (int j = 1; j < ny - 1; ++j) {
         for (int i = 1; i < nx - 1; ++i) {
 
@@ -44,6 +55,22 @@ double dvdx_S = (v_(i+1, j) - v_(i-1, j) + v_(i+1, j-1) - v_(i-1, j-1)) / (4.0 *
 double diff_x_cross = (nu_N * dvdx_N - nu_S * dvdx_S) / dy; 
 
 double diff_x = diff_x1 + diff_x2 + diff_x_cross;
+
+
+
+
+// std::cout
+//     << "i=" << i << ", j=" << j
+//     << " nu_t_P=" << nu_t_(i, j)
+//     << " nu_E=" << nu_E
+//     << " nu_W=" << nu_W
+//     << " nu_N=" << nu_N
+//     << " nu_S=" << nu_S
+//     << " diff_x1=" << diff_x1
+//     << " diff_x2=" << diff_x2
+//     << " diff_x_cross=" << diff_x_cross
+//     << " diff_x=" << diff_x
+//     << '\n';
 
             // // B. Diffusion de u
             // double diff_x1 = (nu_E * (u_(i+1, j) - u_(i, j)) - nu_W * (u_(i, j) - u_(i-1, j))) / (dx * dx);
@@ -100,10 +127,12 @@ double diff_y = diff_y1 + diff_y2 + diff_y_cross;
             // double diff_y = diff_y1 + diff_y2 + diff_y_cross;
 
             // C. Mise à jour v_star
-            v_star_(i, j) = v_(i, j) + dt_ * (-adv_y + diff_y);
+            v_star_(i, j) = v_(i, j) + dt_ * (-adv_y + diff_y);                                                                         
         }
     }
     
+
+    //print_eight_key_positions( nx, ny, dx, dy);
     // Application des conditions aux limites
     // Application des conditions aux limites correctes
 u_star_.fillBoundaryGhostCells(BCType::VelocityU, 1.0); // U avec couvercle mobile u = 1.0
@@ -113,18 +142,45 @@ v_star_.fillBoundaryGhostCells(BCType::VelocityV, 0.0); // V avec couvercle fixe
 }
 
 
-void NavStokesSolver::step() {
+
+
+void NavStokesSolver::step(int step_number) {
     // 1. Calcul de la viscosité turbulente (LES)
-    if (les_model_) {
-        les_model_->computeTurbulentViscosity(u_, v_, nu_t_, mesh_.dx(), mesh_.dy());
-    }
+    // if (les_model_) {
+    //     les_model_->computeTurbulentViscosity(u_, v_, nu_t_, mesh_.dx(), mesh_.dy());
+    // }
 
     // 2. Étape de prédiction : calcul de u_star et v_star
     computePredictorVelocity();
+//     if(step_number==500){     
+//         print_eight_key_positions(mesh_.nx(), mesh_.ny(), mesh_.dx(), mesh_.dy());
+// }
 
     // 3 & 4. Projection complète (Poisson + Correction de vitesse + Ghost cells)
     projection_method_.project(u_star_, v_star_, u_, v_, p_, mesh_, poisson_solver_);
+
 }
+/* void NavStokesSolver::step(int step_number)
+{
+    // 1. Calcul du prédicteur
+    computePredictorVelocity();
+
+    // 2. Diagnostic uniquement au pas 500
+    if (step_number == 500) {
+        print_eight_key_positions(
+            mesh_.nx(), mesh_.ny(),
+            mesh_.dx(), mesh_.dy(),
+            nu_mol_
+        );
+    }
+
+    // 3. Projection de pression
+    projection_method_.project(
+        u_star_, v_star_,
+        u_, v_, p_,
+        mesh_, poisson_solver_
+    );
+}*/
 
 
 void NavStokesSolver::writeVTK(int step) {
@@ -134,6 +190,73 @@ void NavStokesSolver::writeVTK(int step) {
     
     vtk_writer_.write(filename, mesh_, u_, v_, p_);
 }
+
+/**
+ * @brief Affiche les contributions visqueuses (diffusion normale x, y, croisée et totale)
+ *        aux 8 positions clés du domaine (maillage nx * ny).
+ * 
+ * Note : Cette fonction suppose que les tableaux/objets u_, v_ et nu_t_ 
+ * sont accessibles dans le scope où cette fonction est appelée.
+ */
+void NavStokesSolver::print_eight_key_positions(int nx, int ny, double dx, double dy,double nu_mol) {
+    struct KeyPos {
+        std::string name;
+        int i;
+        int j;
+    };
+
+const int nx_phys = nx - 2;  // 48 cellules physiques
+const int ny_phys = ny - 2;  // 48 cellules physiques
+
+const int i_mid = nx_phys / 2;  // 24
+const int j_mid = ny_phys / 2;  // 24
+
+std::vector<KeyPos> positions = {
+    {"Sud-Ouest",    1,       1},
+    {"Sud-Est",      nx_phys, 1},
+    {"Milieu Sud",   i_mid,   1},
+    {"Milieu Ouest", 1,       j_mid},
+    {"Milieu Est",   nx_phys, j_mid},
+    {"Nord-Ouest",   1,       ny_phys},
+    {"Milieu Nord",  i_mid,   ny_phys},
+    {"Nord-Est",     nx_phys, ny_phys}
+};
+
+    std::cout << "\n==================================================================" << std::endl;
+    std::cout << "         BILAN VISQUEUX AUX 8 POSITIONS CLEFS (Smagorinsky)       " << std::endl;
+    std::cout << "==================================================================" << std::endl;
+
+    for (const auto& pos : positions) {
+        int i = pos.i;
+        int j = pos.j;
+
+        // Calcul des viscosités effectives sur les faces
+        double nu_E = 0.5 * (nu_t_(i+1, j) + nu_t_(i, j)) + nu_mol;
+        double nu_W = 0.5 * (nu_t_(i-1, j) + nu_t_(i, j)) + nu_mol;
+        double nu_N = 0.5 * (nu_t_(i, j+1) + nu_t_(i, j)) + nu_mol;
+        double nu_S = 0.5 * (nu_t_(i, j-1) + nu_t_(i, j)) + nu_mol;
+
+        // Calcul des termes de diffusion
+        double diff_x1 = 2.0 * (nu_E * (u_(i+1, j) - u_(i, j)) - nu_W * (u_(i, j) - u_(i-1, j))) / (dx * dx); 
+        double diff_x2 = (nu_N * (u_(i, j+1) - u_(i, j)) - nu_S * (u_(i, j) - u_(i, j-1))) / (dy * dy); 
+        
+        double dvdx_N = (v_(i+1, j+1) - v_(i-1, j+1) + v_(i+1, j) - v_(i-1, j)) / (4.0 * dx); 
+        double dvdx_S = (v_(i+1, j) - v_(i-1, j) + v_(i+1, j-1) - v_(i-1, j-1)) / (4.0 * dx); 
+        double diff_x_cross = (nu_N * dvdx_N - nu_S * dvdx_S) / dy; 
+
+        double diff_x = diff_x1 + diff_x2 + diff_x_cross;
+
+        // Affichage formaté console
+        std::cout << "[" << pos.name << "] (i=" << i << ", j=" << j << ")\n"
+                  << "  -> nu_t(P) = " << nu_t_(i, j) << "\n"
+                  << "  -> diff_x1 = " << diff_x1 << "\n"
+                  << "  -> diff_x2 = " << diff_x2 << "\n"
+                  << "  -> cross   = " << diff_x_cross << "\n"
+                  << "  -> Total   = " << diff_x << "\n"
+                  << "------------------------------------------------------------------" << std::endl;
+    }
+}
+
 
 
 

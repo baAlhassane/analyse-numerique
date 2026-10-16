@@ -58,7 +58,7 @@ public:
      double getMaxDivU() const {
         return projection_method_.getMaxDivU();
     }
-    void step();
+    void step(int step);
 
    // ✅ Après :
 void writeVTK(int step_number) ;
@@ -70,7 +70,7 @@ void writeVTK(int step_number) ;
     const Field2D& getUStar() const { return u_star_; }
     const Field2D& getVStar() const { return v_star_; }
  
-
+void print_eight_key_positions(int nx, int ny, double dx, double dy, double nu_mol=0.001);
 private:
     // Étape 1 : Calcul de la vitesse prédictive
     void computePredictorVelocity();
